@@ -87,8 +87,10 @@ type flags struct {
 	ProfilingDuration time.Duration `kong:"help='The agent profiling duration to use. Leave this empty to use the defaults.',default='10s'"`
 	CgroupPath        string        `kong:"help='The cgroupfs path.'"`
 	// SystemdCgroupPath is deprecated and will be eventually removed, please use the CgroupPath flag instead.
-	SystemdCgroupPath string `kong:"help='[deprecated, use --cgroup-path] The cgroupfs path to a systemd slice.'"`
-	DebugInfoDisable  bool   `kong:"help='Disable debuginfo collection.',default='false'"`
+	SystemdCgroupPath string   `kong:"help='[deprecated, use --cgroup-path] The cgroupfs path to a systemd slice.'"`
+	DebugInfoDisable  bool     `kong:"help='Disable debuginfo collection.',default='false'"`
+	OneOff            bool     `kong:"help='Profile a one-off CLI command'"`
+	OneOffCommand     []string `kong:"arg:''"`
 }
 
 func externalLabels(flagExternalLabels map[string]string, flagNode string) model.LabelSet {
@@ -184,6 +186,16 @@ func main() {
 		configs = append(configs, discovery.NewSystemdConfig(
 			flags.Cgroups,
 			flags.CgroupPath,
+		))
+	}
+
+	if flags.OneOff {
+		if len(flags.OneOffCommand) == 0 {
+			level.Error(logger).Log("msg", "must pass command and arguments for --one-off")
+			os.Exit(1)
+		}
+		configs = append(configs, discovery.NewSubprocessConfig(
+			flags.OneOffCommand,
 		))
 	}
 

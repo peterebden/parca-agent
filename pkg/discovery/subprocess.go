@@ -14,11 +14,15 @@
 package discovery
 
 import (
+	"context"
 	"os"
 	"os/exec"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	"github.com/prometheus/common/model"
+
+	"github.com/parca-dev/parca-agent/pkg/target"
 )
 
 // A SubprocessConfig configures a new SubprocessDiscoverer instance.
@@ -40,7 +44,7 @@ func (c *SubprocessConfig) Name() string {
 
 // NewSubprocessConfig returns a new config based on the given command + arguments.
 func NewSubprocessConfig(command []string) *SubprocessConfig {
-	return &SubprocessDiscoverer{
+	return &SubprocessConfig{
 		command: command[0],
 		args:    command[1:],
 	}
@@ -58,10 +62,7 @@ func (c *SubprocessConfig) NewDiscoverer(d DiscovererOptions) (Discoverer, error
 // Run starts the subprocess and runs this discoverer against it.
 func (d *SubprocessDiscoverer) Run(ctx context.Context, up chan<- []*target.Group) error {
 	level.Debug(d.logger).Log("msg", "starting subprocess", "command", d.command, "args", d.args)
-	cmd, err := exec.CommandContext(ctx, d.command, d.args...)
-	if err != nil {
-		return err
-	}
+	cmd := exec.CommandContext(ctx, d.command, d.args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

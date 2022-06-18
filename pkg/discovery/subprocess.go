@@ -27,15 +27,15 @@ import (
 
 // A SubprocessConfig configures a new SubprocessDiscoverer instance.
 type SubprocessConfig struct {
-	command string
-	args    []string
+	command []string
+	cgexec  string
 }
 
 // A SubprocessDiscoverer 'discovers' a process to instrument by starting it as a subprocess.
 type SubprocessDiscoverer struct {
 	logger  log.Logger
-	command string
-	args    []string
+	command []string
+	cgexec  string
 }
 
 func (c *SubprocessConfig) Name() string {
@@ -45,8 +45,8 @@ func (c *SubprocessConfig) Name() string {
 // NewSubprocessConfig returns a new config based on the given command + arguments.
 func NewSubprocessConfig(command ...string) *SubprocessConfig {
 	return &SubprocessConfig{
-		command: command[0],
-		args:    command[1:],
+		command: command,
+		cgexec:  "cgexec",
 	}
 }
 
@@ -55,14 +55,15 @@ func (c *SubprocessConfig) NewDiscoverer(d DiscovererOptions) (Discoverer, error
 	return &SubprocessDiscoverer{
 		logger:  d.Logger,
 		command: c.command,
-		args:    c.args,
+		cgexec:  c.cgexec,
 	}, nil
 }
 
 // Run starts the subprocess and runs this discoverer against it.
 func (d *SubprocessDiscoverer) Run(ctx context.Context, up chan<- []*target.Group) error {
+	args := append([]string{"-g", "*:" + group}, d.command...)
 	level.Debug(d.logger).Log("msg", "starting subprocess", "command", d.command, "args", d.args)
-	cmd := exec.CommandContext(ctx, d.command, d.args...)
+	cmd := exec.CommandContext(ctx, d.cgexec, d.command...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

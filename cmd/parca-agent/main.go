@@ -195,7 +195,7 @@ func main() {
 			os.Exit(1)
 		}
 		configs = append(configs, discovery.NewSubprocessConfig(
-			flags.OneOffCommand,
+			flags.OneOffCommand...,
 		))
 	}
 

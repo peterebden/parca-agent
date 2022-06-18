@@ -43,7 +43,7 @@ func (c *SubprocessConfig) Name() string {
 }
 
 // NewSubprocessConfig returns a new config based on the given command + arguments.
-func NewSubprocessConfig(command []string) *SubprocessConfig {
+func NewSubprocessConfig(command ...string) *SubprocessConfig {
 	return &SubprocessConfig{
 		command: command[0],
 		args:    command[1:],
